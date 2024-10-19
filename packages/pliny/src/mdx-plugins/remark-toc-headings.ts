@@ -2,11 +2,21 @@ import { VFile } from 'vfile'
 import { Parent } from 'unist'
 import { visit } from 'unist-util-visit'
 import { Heading } from 'mdast'
-import GithubSlugger from 'github-slugger'
 import { toString } from 'mdast-util-to-string'
 import { remark } from 'remark'
 
-const slugger = new GithubSlugger()
+function generateSlug(string) {
+  return string
+    .toString()
+    .normalize('NFKD') // Normalize to decomposed form for handling accents
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-') // Replace spaces with -
+    .replace(/[^\w-]+/g, '') // Remove all non-word chars
+    .replace(/--+/g, '-') // Replace multiple - with single -
+    .replace(/^-+/, '') // Trim - from start of text
+    .replace(/-+$/, '') // Trim - from end of text
+}
 
 export type TocItem = {
   value: string
@@ -26,7 +36,7 @@ export function remarkTocHeadings() {
       const textContent = toString(node)
       toc.push({
         value: textContent,
-        url: '#' + slugger.slug(textContent),
+        url: '#' + generateSlug(textContent),
         depth: node.depth,
       })
     })
